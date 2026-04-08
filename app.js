@@ -394,32 +394,70 @@ function updateRecipes() {
 
 // --- 데이터 영구 저장 (Local Storage) ---
 function saveInventory() {
+    // DOM을 직접 읽어서 현재 아이템이 냉장고에 있는지 상온에 있는지 위치를 정확히 파악하여 저장합니다.
+    const fridgeZone = document.getElementById('fridgeZone');
+    const pantryZone = document.getElementById('pantryZone');
+    
+    const fridgeItems = Array.from(fridgeZone.querySelectorAll('.ingredient-item')).map(el => el.dataset.id);
+    const pantryItems = Array.from(pantryZone.querySelectorAll('.ingredient-item')).map(el => el.dataset.id);
+
+    localStorage.setItem('fridgeLocations', JSON.stringify({ fridge: fridgeItems, pantry: pantryItems }));
+    // 혹시 모를 기존 로직 연동을 위해 예전 id 목록 형태로도 유지
     localStorage.setItem('fridgeInventory', JSON.stringify(Array.from(inventory)));
 }
 
 function loadInventory() {
+    const savedLocsStr = localStorage.getItem('fridgeLocations');
+    
+    // 신버전 (위치 정보 포함) 로직
+    if (savedLocsStr) {
+        const savedLocs = JSON.parse(savedLocsStr);
+        const allItems = [...(savedLocs.fridge || []), ...(savedLocs.pantry || [])];
+        
+        allItems.forEach(id => {
+            if(inventory.has(id)) return;
+            const ingredientInfo = ingredientsDB.find(ing => ing.id === id);
+            if (ingredientInfo) {
+                inventory.add(id);
+                // 저장된 위치 정보를 바탕으로 구역 지정
+                const isFridge = savedLocs.fridge.includes(id);
+                const zone = document.getElementById(isFridge ? 'fridgeZone' : 'pantryZone');
+                
+                if (zone) {
+                    const storedItem = createStoredElement(ingredientInfo, zone);
+                    zone.appendChild(storedItem);
+
+                    const hint = zone.querySelector('.empty-hint');
+                    if (hint) hint.style.display = 'none';
+                }
+            }
+        });
+        updateRecipes();
+        return;
+    }
+
+    // 구버전 (위치 정보 없음 - DB의 type 기준) 호환성 유지 로직
     const saved = localStorage.getItem('fridgeInventory');
     if (saved) {
         const savedIds = JSON.parse(saved);
         savedIds.forEach(id => {
             const ingredientInfo = ingredientsDB.find(ing => ing.id === id);
-            if (ingredientInfo) {
+            if (ingredientInfo && !inventory.has(id)) {
                 inventory.add(id);
 
-                // 맞는 zone에 넣기
+                // 구버전은 ingredientInfo.type 속성에 강제로 의존했음
                 const zoneId = ingredientInfo.type === 'fridge' ? 'fridgeZone' : 'pantryZone';
                 const zone = document.getElementById(zoneId);
                 if (zone) {
                     const storedItem = createStoredElement(ingredientInfo, zone);
                     zone.appendChild(storedItem);
 
-                    // empty-hint 감추기 로직
                     const hint = zone.querySelector('.empty-hint');
                     if (hint) hint.style.display = 'none';
                 }
             }
         });
-
+        saveInventory(); // 신버전으로 마이그레이션 저장
         updateRecipes();
     }
 }
