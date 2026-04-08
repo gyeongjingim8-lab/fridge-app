@@ -54,6 +54,49 @@ h1 {
   font-size: 1.1rem;
 }
 
+/* User Manual Box */
+.manual-box {
+  margin-top: 20px;
+  padding: 15px 25px;
+  text-align: left;
+  background: rgba(255, 255, 255, 0.9);
+  border-left: 4px solid var(--primary);
+}
+
+.manual-box h3 {
+  font-family: 'Jua', sans-serif;
+  color: #2d3436;
+  margin-bottom: 12px;
+  font-size: 1.2rem;
+}
+
+.manual-box ol {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #2d3436;
+  padding-left: 15px;
+}
+
+.manual-box li {
+  margin-bottom: 8px;
+}
+
+.manual-box li strong {
+  color: var(--primary);
+}
+
+.manual-badge {
+  display: inline-block;
+  background-color: #ffeaa7;
+  color: #d35400;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
 .glass-panel {
   background: var(--glass-bg);
   backdrop-filter: blur(12px);
